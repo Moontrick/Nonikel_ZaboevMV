@@ -1,29 +1,22 @@
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
-from .serializers import UserCreateSerializer, UserSerializer
-from .forms import NameForm
-
+from .serializers import UserCreateSerializer, UserSerializer, UserPhotosSerializer
+from .models import UserNews
 
 class RegisterView(APIView):
   def post(self, request):
     data = request.data
-    print(data)
+
     serializer = UserCreateSerializer(data=data)
-    
+
     if not serializer.is_valid():
-        print("1")
-        return render(request, "index.html", {"form": data})  
+      return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     user = serializer.create(serializer.validated_data)
     user = UserSerializer(user)
-    print("2")
-    print(user)
-    # print(user)
-    return render(request, "index.html", {"form": user.data})  
-    # return Response(user.data, status=status.HTTP_201_CREATED)
+
+    return Response(user.data, status=status.HTTP_201_CREATED)
 
 
 class RetrieveUserView(APIView):
@@ -35,25 +28,20 @@ class RetrieveUserView(APIView):
 
     return Response(user.data, status=status.HTTP_200_OK)
   
-def index(request):
-    return render(request, "index.html")
+class UserNewsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request):
+        data = request.data
+        serializer = UserPhotosSerializer(data=data)
 
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-# def get_name(request):
-#     # if this is a POST request we need to process the form data
-#     if request.method == "POST":
-#         # create a form instance and populate it with data from the request:
-#         form = NameForm(request.POST)
-#         # check whether it's valid:
-#         if form.is_valid():
-#             # process the data in form.cleaned_data as required
-#             # ...
-#             # redirect to a new URL:
-#             return HttpResponseRedirect("/thanks/")
-
-#     # if a GET (or any other method) we'll create a blank form
-#     else:
-#         form = NameForm()
-
-#     return render(request, "index.html", {"form": form})
+        user_photo_instance = serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    # def get(self, request):
+    #     user_photos = UserPhotos.objects.filter(user_name=request.user)
+    #     serializer = UserPhotosSerializerView(user_photos, many=True)
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
+       

@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
-
+from django.contrib.auth import get_user_model
 
 class UserAccountManager(BaseUserManager):
   def create_user(self, first_name, email, password=None):
@@ -47,3 +47,16 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
   def __str__(self):
     return self.email
+  
+User = get_user_model()
+
+class UserNews(models.Model):
+    user_name = models.ForeignKey(User, on_delete=models.CASCADE, to_field='id')
+    user_photo = models.ImageField(upload_to='images/')
+    date_upload = models.DateField()
+    news_title = models.TextField()
+    news_text = models.TextField()
+    new_blog = models.TextField()
+    
+    def __str__(self):
+        return f"New for {self.user.email}"
